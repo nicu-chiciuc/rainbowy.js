@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>test</title>
+</head>
+<body onload="run()">
+
+
+	<script type="text/javascript">
+		var _ = {}
+		var Color
+
+		function run () {
+			(function initCanvas() {
+				_.canvas = document.createElement("canvas")
+				_.canvas.style.position = "absolute"	
+				_.canvas.style.top = "0px"
+				_.canvas.style.left = "0px"
+				_.canvas.width = window.innerWidth
+				_.canvas.height = window.innerHeight
+				document.body.appendChild( _.canvas )
+				_.context = _.canvas.getContext("2d")
+			})()
+
+			Color = net.brehaut.Color
+			
+			var c1 = [0, 255, 0, 1]
+			var c2 = [255, 0, 100, 1]
+			var rain = new Rainbow(c1, c2)
+			rain.putColorAt(0.3, [0, 0, 255, 1])
+			rain.checkpoints[1] = 0.7
+
+			rain.putColorAt(0.5, [100, 100, 0, 0.5])
+
+			var c3 = rain.getColorAt(0.5)
+			
+			var c = new Color(c3)
+			console.log(c.toCSS())
+
+			drawRain()
+
+			setInterval(function () {
+				_.context.clearRect(0, 0, 1000, 1000)
+				drawRain()
+			}, 100)
+		
+			function drawRain () {
+				for (var i = 0; i < 1; i += 0.001) {
+					c = new Color(rain.getColorAt(i))
+					drawLine(10 + i*1000, 0, 10 + i*1000, 100, c.toRGB())
+				}
+			}
+		}
+
+
+
+		function drawLine (x1, y1, x2, y2, color) {
+			_.context.beginPath()
+			_.context.moveTo(x1, y1)
+			_.context.lineTo(x2, y2)
+
+			_.context.strokeStyle = color
+			_.context.lineWidth = 2
+			_.context.stroke()
+		}
+
+	</script>
+	
+	<script type="text/javascript" src="rainbow.js"></script>
+	<script type="text/javascript" src="external/color.js"></script>
+</body>
+</html>
