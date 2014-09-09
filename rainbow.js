@@ -2,7 +2,10 @@
 var Rainbow = (function () {	
 
 	var Rainbow = (function () {
+		function Rainbow (startColor, endColor) {
 			
+		}	
+
 	})()
 
 	var RainbowCore = (function () {
@@ -10,10 +13,9 @@ var Rainbow = (function () {
 			RainbowCore.checkGoodColor(startColor)
 			RainbowCore.checkGoodColor(endColor)
 
-			this.colors = [startColor, endColor]
-			this.checkpoints = [0, 1]
-			
-			this.transitionFunc = [ Utils.identityFunc ]
+			this.checkpoints = [{pos: 0, color: startColor}, {pos: 1, color: endColor}]
+
+			this.transitions = [ Utils.identityFunc ]
 
 		}	
 
@@ -21,15 +23,15 @@ var Rainbow = (function () {
 			RainbowCore.checkGoodPos(pos)
 
 			var floorCheckpoint = this.getFloorCheckpoint(pos)
-			var startColor = this.colors[ floorCheckpoint ]
-			var endColor = this.colors[ floorCheckpoint + 1 ]
-			var realPos = Utils.invApplyPosition(pos, this.checkpoints[floorCheckpoint], this.checkpoints[floorCheckpoint+1])
+			var startColor = this.checkpoints[ floorCheckpoint ].color
+			var endColor = this.checkpoints[ floorCheckpoint + 1 ].color
+			var realPos = Utils.invApplyPosition(pos, this.checkpoints[floorCheckpoint].pos, this.checkpoints[floorCheckpoint+1].pos)
 
 			var retColor = [
-				Utils.applyPosition( realPos, startColor[0], endColor[0], this.transitionFunc[floorCheckpoint] ) ,
-				Utils.applyPosition( realPos, startColor[1], endColor[1], this.transitionFunc[floorCheckpoint] ) ,
-				Utils.applyPosition( realPos, startColor[2], endColor[2], this.transitionFunc[floorCheckpoint] ) ,
-				Utils.applyPosition( realPos, startColor[3], endColor[3], this.transitionFunc[floorCheckpoint] ) ,
+				Utils.applyPosition( realPos, startColor[0], endColor[0], this.transitions[floorCheckpoint] ) ,
+				Utils.applyPosition( realPos, startColor[1], endColor[1], this.transitions[floorCheckpoint] ) ,
+				Utils.applyPosition( realPos, startColor[2], endColor[2], this.transitions[floorCheckpoint] ) ,
+				Utils.applyPosition( realPos, startColor[3], endColor[3], this.transitions[floorCheckpoint] ) ,
 			]
 
 			return retColor
@@ -41,16 +43,15 @@ var Rainbow = (function () {
 			func = func || Utils.identityFunc
 
 			var floorCheckpoint = this.getFloorCheckpoint(pos)
-			this.colors.splice(floorCheckpoint+1, 0, color)
-			this.checkpoints.splice(floorCheckpoint+1, 0, pos)
-			this.transitionFunc.splice(floorCheckpoint+1, 0, func)
+			this.checkpoints.splice(floorCheckpoint+1, 0, {pos: pos, color: color})
+			this.transitions.splice(floorCheckpoint+1, 0, func)
 		}
 
 		RainbowCore.prototype.getFloorCheckpoint = function (pos) {
 			RainbowCore.checkGoodPos(pos)
 
 			for (var i = 0, len = this.checkpoints.length; i < len; i++)
-				if (this.checkpoints[i] > pos)
+				if (this.checkpoints[i].pos > pos)
 					return i-1
 		}
 
@@ -87,41 +88,70 @@ var Rainbow = (function () {
 			return (pos01 - start01) / (end01 - start01)
 		}
 
+		// For p0(0, 0), p2(1, 1)
+		Utils.getBezier01 = function (x, x1, y1) {
+			var t = (-x1 + Math.sqrt(x1*x1 + x*(1-2*x1))) / (1-2*x1)
+			var y = 2*t*(1-t) * y1 + t*t
+			return y
+		}
+
+		Utils.CubicBezier = function (x1, y1, x2, y2) {
+			this.x1 = x1
+			this.y1 = y1
+			this.x2 = x2
+			this.y2 = y2
+			this.err = 0.001
+
+			var p = Math.pow
+
+			this.tTox = function (t) {
+				return 3*p(1 - t, 2)*t*this.x1 + 3*(1 - t)*p(t, 2)*this.x2 + p(t, 3)
+			}
+
+			this.tToy = function (t) {
+				return 3*p(1 - t, 2)*t*this.y1 + 3*(1 - t)*p(t, 2)*this.y2 + p(t, 3)
+			}
+
+			this.xToy = function (x) {
+				return this.tToy(this.xTot(x))
+			}
+
+			this.xTot = function (x) {
+				var tmin = 0,
+					tmax = 1,
+					tnow,
+					xnow,
+					maxRep = 1 / this.err
+
+				while (maxRep-- > 0) {
+					tnow = (tmax+tmin) / 2
+					xnow = this.tTox(tnow)
+
+					if (Math.abs(x-xnow) < this.err) {
+						return tnow
+					} else
+					if (xnow < x) {
+					    tmin = tnow
+					} else {
+						tmax = tnow
+					}
+				}
+			}
+		}
+
 		return Utils
 	})()
 
-	var Gradient = (function () {
-		Gradient.defaultStartColor = [0, 255, 255, 1]
-		Gradient.defaultEndColor = [0, 0, 0, 1]
-		Gradient.defaultTransFunc = function (x) {
-			return x
-		}
 
 
-		function Gradient (startColor, endColor, transFunc) {
-			this.startColor = startColor || Gradient.defaultStartColor
-			this.endColor = endColor || Gradient.defaultEndColor
-			this.transFunc = transFunc || Gradient.defaultTransFunc
-		}
-
-		Gradient.prototype.getNumberAt = function (pos, startNum, endNum) {
-			if (pos < 0 || pos > 1) 
-				throw new RangeError("Number should be between 0 and 1 inclusive")
-
-			return (endNum - startNum) * this.transFunc[pos] + startNum
-		}
-
-		Gradient.prototype.getColorAt = function (pos) {
-			var color = []
-
-			for (var i = 0; i < 4; i++) 
-				color[i] = this.getNumberAt(pos, this.startColor[i], this.endColor[i])
-
-			return color
-		}
-	})() 
-
-
+	RainbowCore.Utils = Utils
 
 	return RainbowCore
 })()
+
+
+// For node.js
+var module
+if (module) {
+	module.exports = Rainbow
+}
