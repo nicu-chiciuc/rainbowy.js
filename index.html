@@ -28,47 +28,68 @@
 			})()
 
 			Color = net.brehaut.Color
-			
-			var c1 = [255, 0, 0, 1]
-			var c2 = [0, 255, 0, 1]
-			var c3 = [0, 0, 255, 1]
-			var rain = new Rainbow(c1, c3)
-			var c3 
+
+			var rain = new Rainbow('#ff0000', '#1100ff')
 			
 			var c
 			cub = new Rainbow.Utils.CubicBezier(0, 1, 1, 0)
 
 			drawRain = function () {
-				_.context.clearRect(0, 0, 1200, 600)
+				// _.context.clearRect(0, 0, _.canvas.width, 200)
 				for (var i = 0; i < 1; i += 0.001) {
-					c = new Color(rain.getColorAt(i))
-					drawLine(10 + i*1300, 0, 10 + i*1300, 200, c.toRGB())
+					c = rain.getRgbaColorAt(i)
+					// console.log(c)
+					drawLine(10 + i*1300, 0, 10 + i*1300, 200, c)
 				}
 			}
 
+			_.context.beginPath()
+			_.context.rect(0, 200, 200, 200)
+			_.context.fillStyle = 'yellow'
+			_.context.fill()
 
 			drawRain()
+			var iii = 0
 
-			setInterval(function () {
-				cub.x1 += 0.01
-				cub.x1 %= 1
+			window.onmousemove = function (evt) {
+				var x1 = evt.layerX / 200,
+					y1 = (evt.layerY - 200) / 200;
+
+				if (x1 < 0) x1 = 0
+				if (y1 > 1) y1 = 1
+
+
+				rain.core.transitions[0] = function (x) {
+					return Rainbow.Utils.getBezier01(x, x1, y1)
+				}
+
 				drawRain()
-			}, 50)
-
-
-			window.onclick = function () {
-
-				var U = Rainbow.Utils
-
-
-				rain.transitions[0] =
-				// rain.transitions[1] = 
-					function (x) {
-						
-						return cub.xToy(x)
-					}
-				drawRain()	
 			}
+
+			// setInterval(function () {
+			// 	cub.x1 = 0
+			// 	cub.y1 = 1
+			// 	cub.x2 = 0
+			// 	cub.y2 =  0.2
+
+			// 	var t = []
+			// 	for (var i = 0; i < 1; i += 0.001) 
+			// 		t.push(Math.random() * 0.6 - 0.3)
+			// 	var tlen = t.length
+				
+
+			// 	rain.core.transitions[0] =
+			// 	// rain.core.transitions[1] = 
+			// 		function (x) {
+			// 			var y = cub.xToy(x) // + t[iii]
+			// 			iii ++
+			// 			iii %= 1000
+
+			// 			return y
+			// 		}
+
+			// 	drawRain()
+			// }, 1000)
 		}
 
 
