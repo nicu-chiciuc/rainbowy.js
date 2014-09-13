@@ -1,9 +1,11 @@
-
-var Rainbowy = (function () {	
+var Rainbowy = (function () {
 
 	var Rainbow = (function () {
 		function Rainbow (startColor, endColor) {
-			this.core = new RainbowCore(Color.hexToColor(startColor), Color.hexToColor(endColor))
+			this.core = new RainbowCore(
+				Color.autoToColor(startColor), 
+				Color.autoToColor(endColor)
+			)
 
 			this.minNum = 0
 			this.maxNum = 1
@@ -19,7 +21,7 @@ var Rainbowy = (function () {
 
 			var realPos = Utils.invApplyPosition(pos, this.minNum, this.maxNum, Utils.identityFunc)
 			var color = this.core.coreGetColorAt( realPos )
-			return Color.colorTo(color, type)
+			return Color.colorToOther(color, type)
 		}
 
 		Rainbow.prototype.putColorAt = function (pos, color, func) {
@@ -28,7 +30,7 @@ var Rainbowy = (function () {
 
 			var realPos = Utils.invApplyPosition(pos, this.minNum, this.maxNum, Utils.identityFunc)
 			var colorType = Color.getColorType(color)
-			var realColor = Color.fromColor(color, colorType)
+			var realColor = Color.otherToColor(color, colorType)
 
 			this.core.corePutColorAt(realPos, realColor, func)
 		}
@@ -71,8 +73,6 @@ var Rainbowy = (function () {
 
 				retColor.push(num)
 			}
-
-			// console.log(retColor)
 
 			return retColor
 		}
@@ -125,6 +125,11 @@ var Rainbowy = (function () {
 			},
 
 		getPosBetween : function (pos, min, max) {
+				if (min > max) {
+					console.warn("In function Rainbow.Utils.getPosBetween, variable 'min' is bigger than 'max'")
+					return pos
+				}
+
 				if (pos < min)
 					return min
 				else 
@@ -281,7 +286,7 @@ var Rainbowy = (function () {
 			return undefined
 		},
 
-		fromColor : function (color, colorType) {
+		otherToColor : function (color, colorType) {
 			switch (colorType) {
 				case 'hex' : return Color.hexToColor( color ) 
 				case 'rgba' : return Color.rgbaToColor( color ) 
@@ -290,7 +295,7 @@ var Rainbowy = (function () {
 			}
 		},
 
-		colorTo : function (color, colorType) {
+		colorToOther : function (color, colorType) {
 			switch (colorType) {
 				case 'hex' : return Color.colorToHex( color )
 				case 'rgba' : return Color.colorToRgba( color )
@@ -298,6 +303,10 @@ var Rainbowy = (function () {
 				default : return color
 			}
 		},
+
+		autoToColor : function (color) {
+			return Color.otherToColor(color, Color.getColorType(color))
+		}
 	}
 
 	Rainbow.Utils = Utils
