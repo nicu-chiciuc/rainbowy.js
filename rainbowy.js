@@ -205,18 +205,18 @@ var Rainbowy = (function () {
 
 	var Color = {
 		numToHex : function (c) {
-				var hex = c.toString(16);
-				return hex.length == 1 ? "0" + hex : hex;
+				var hex = c.toString(16)
+				return hex.length == 1 ? "0" + hex : hex
 			},
 
 		colorToHex : function (col) {
-				return "#" + Color.numToHex(parseInt(col[0])) + Color.numToHex(parseInt(col[1])) + Color.numToHex(parseInt(col[2]));
+				return "#" + Color.numToHex(parseInt(col[0])) + Color.numToHex(parseInt(col[1])) + Color.numToHex(parseInt(col[2]))
 			},
 
 		hexRegex : /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i,
 
 		hexToColor : function (hex) {
-				var result = Color.hexRegex.exec(hex);
+				var result = Color.hexRegex.exec(hex)
 				if (result)
 					return [
 						parseInt(result[1], 16),
@@ -248,7 +248,7 @@ var Rainbowy = (function () {
 
 		rgbToColor : function (rgb) {
 				rgb = rgb.replace(/\s/g, "") 
-				var result = rgbRegex3.exec(rgb)
+				var result = rgbRegex.exec(rgb)
 
 				var ret = [
 					parseInt(result[1]),
