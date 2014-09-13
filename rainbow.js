@@ -3,7 +3,7 @@ var Rainbow = (function () {
 
 	var Rainbow = (function () {
 		function Rainbow (startColor, endColor) {
-			this.core = new RainbowCore(Utils.hexToColor(startColor), Utils.hexToColor(endColor))
+			this.core = new RainbowCore(Color.hexToColor(startColor), Color.hexToColor(endColor))
 
 			this.minNum = 0
 			this.maxNum = 1
@@ -14,48 +14,27 @@ var Rainbow = (function () {
 			this.maxNum = maxNum
 		}
 
-		Rainbow.prototype.getColorAt = function (pos) {
-			Utils.checkPosBetween(pos, this.minNum, this.maxNum)
+		Rainbow.prototype.getColorAt = function (pos, type) {
+			Check.checkPosBetween(pos, this.minNum, this.maxNum)
 
 			var realPos = Utils.invApplyPosition(pos, this.minNum, this.maxNum, Utils.identityFunc)
-			return this.core.coreGetColorAt( realPos )
-		}
-
-		Rainbow.prototype.getHexColorAt = function (pos) {
-			return Utils.colorToHex( this.getColorAt(pos) )
-		}
-
-		Rainbow.prototype.getRgbaColorAt = function (pos) {
-			return Utils.colorToRgba( this.getColorAt(pos) )
-		}
-
-		Rainbow.prototype.getRgbColorAt = function (pos) {
-			return Utils.colorToRgb( this.getColorAt(pos) )
+			var color = this.core.coreGetColorAt( realPos )
+			return Color.colorTo(color, type)
 		}
 
 		Rainbow.prototype.putColorAt = function (pos, color, func) {
-			Utils.checkPosBetween(pos, this.minNum, this.maxNum)
-			Utils.checkGoodColor(color)
+			Check.checkPosBetween(pos, this.minNum, this.maxNum)
 			func = func || Utils.identityFunc
 
 			var realPos = Utils.invApplyPosition(pos, this.minNum, this.maxNum, Utils.identityFunc)
-			this.core.corePutColorAt(realPos, color, func)
-		}
+			var colorType = Color.getColorType(color)
+			var realColor = Color.fromColor(color, colorType)
 
-		Rainbow.prototype.putHexColorAt = function (pos, hexColor, func) {
-			this.putColorAt(pos, Utils.hexToColor(hexColor), func)
-		}
-
-		Rainbow.prototype.putRgbaColorAt = function (pos, rgbaColor, func) {
-			this.putColorAt(pos, Utils.rgbaToColor(hexColor), func)			
-		}
-
-		Rainbow.prototype.putRgbColorAt = function (pos, rgbaColor, func) {
-			this.putColorAt(pos, Utils.rgbToColor(hexColor), func)	
+			this.core.corePutColorAt(realPos, realColor, func)
 		}
 
 		Rainbow.prototype.removeColorAtIndex = function (index) {
-			Utils.checkPosBetween(index, 1, this.core.checkpoints.length-2)
+			Check.checkPosBetween(index, 1, this.core.checkpoints.length-2)
 
 			this.core.checkpoints.splice(index, 1)
 		}
@@ -65,15 +44,15 @@ var Rainbow = (function () {
 
 	var RainbowCore = (function () {
 		function RainbowCore (startColor, endColor) {
-			Utils.checkGoodColor(startColor)
-			Utils.checkGoodColor(endColor)
+			Check.checkGoodColor(startColor)
+			Check.checkGoodColor(endColor)
 
 			this.checkpoints = [{pos: 0, color: startColor}, {pos: 1, color: endColor}]
 			this.transitions = [ Utils.identityFunc ]
 		}	
 
 		RainbowCore.prototype.coreGetColorAt = function (pos) {
-			Utils.checkPosBetween(pos)
+			Check.checkPosBetween(pos)
 
 			var floorCheckpoint = this.getFloorCheckpoint(pos)
 			var startColor = this.checkpoints[ floorCheckpoint ].color
@@ -99,8 +78,8 @@ var Rainbow = (function () {
 		}
 
 		RainbowCore.prototype.corePutColorAt = function (pos, color, func) {
-			Utils.checkPosBetween(pos, 0, 1)
-			Utils.checkGoodColor(color)
+			Check.checkPosBetween(pos, 0, 1)
+			Check.checkGoodColor(color)
 			func = func || Utils.identityFunc
 
 
@@ -110,7 +89,7 @@ var Rainbow = (function () {
 		}
 
 		RainbowCore.prototype.getFloorCheckpoint = function (pos) {
-			Utils.checkPosBetween(pos, 0, 1)
+			Check.checkPosBetween(pos, 0, 1)
 
 			var len = this.checkpoints.length
 			for (var i = 0; i < len; i++)
@@ -129,7 +108,7 @@ var Rainbow = (function () {
 			},
 
 		applyPosition : function (pos01, start, end, func) {
-				Utils.checkPosBetween(pos01, 0, 1)
+				Check.checkPosBetween(pos01, 0, 1)
 				func = func || Utils.identityFunc
 
 				var fun = func(pos01)
@@ -139,7 +118,7 @@ var Rainbow = (function () {
 			},
 
 		invApplyPosition : function (pos01, start01, end01, func) {
-				Utils.checkPosBetween(pos01, start01, end01)
+				Check.checkPosBetween(pos01, start01, end01)
 				func = func || Utils.identityFunc
 
 				return (pos01 - start01) / (end01 - start01)
@@ -155,90 +134,6 @@ var Rainbow = (function () {
 					return pos
 			},
 
-		checkPosBetween : function (pos, min, max) {
-				if (pos < min || pos > max)
-					throw new Error("A good position should be between " + min + " and " + max)
-			},
-
-		checkGoodColor : function (color) {
-				if (!(Array.isArray(color) && color.length == 4))
-					throw new Error("Invalid color, a color should be an array with exactly 4 elements")
-				
-				for (var i = 0; i < 3; i++) 
-					Utils.checkPosBetween(color[i], 0, 255)
-				
-				Utils.checkPosBetween(color[3], 0, 1)
-			},
-
-		numToHex : function (c) {
-				var hex = c.toString(16);
-				return hex.length == 1 ? "0" + hex : hex;
-			},
-
-		colorToHex : function (col) {
-				return "#" + Utils.numToHex(parseInt(col[0])) + Utils.numToHex(parseInt(col[1])) + Utils.numToHex(parseInt(col[2]));
-			},
-
-		hexRegex : /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i,
-
-		hexToColor : function (hex) {
-				var result = Utils.hexRegex.exec(hex);
-				if (result)
-					return [
-						parseInt(result[1], 16),
-						parseInt(result[2], 16),
-						parseInt(result[3], 16),
-						1
-					]
-				else
-					throw Error("Invalid hex color.")
-			},
-
-		rgbaRegex : /^rgba\((\d+),(\d+),(\d+),(\d*\.\d*)\)$/i,
-
-		rgbaToColor : function (rgba) {
-				rgba = rgba.replace(/\s/g, "") 
-				var result = rgbaRegex.exec(rgba)
-
-				var ret = [
-					parseInt(result[1]),
-					parseInt(result[2]),
-					parseInt(result[3]),
-					parseFloat(result[4])
-				]
-
-				return ret
-			},
-
-		rgbRegex : /^rgb\((\d+),(\d+),(\d+)\)$/i,
-
-		rgbToColor : function (rgb) {
-				rgb = rgb.replace(/\s/g, "") 
-				var result = rgbRegex3.exec(rgb)
-
-				var ret = [
-					parseInt(result[1]),
-					parseInt(result[2]),
-					parseInt(result[3])
-				]
-
-				return ret
-			},
-
-		colorToRgba : function (col) {
-				return "rgba(" + 
-					parseInt(col[0]) + ", " + 
-					parseInt(col[1]) + ", " + 
-					parseInt(col[2]) + ", " +
-					parseInt(col[3]) + ")"
-			},
-
-		colorToRgb : function (col) {
-			return "rgb(" +
-				parseInt(col[0]) + ", " + 
-				parseInt(col[1]) + ", " + 
-				parseInt(col[2]) + ")"
-		},
 		
 		getBezier01 : function (x, x1, y1) {
 				var t = (-x1 + Math.sqrt(x1*x1 + x*(1-2*x1))) / (1-2*x1)
@@ -291,8 +186,124 @@ var Rainbow = (function () {
 			},
 	}
 
+	var Check = {
+		checkPosBetween : function (pos, min, max) {
+				if (pos < min || pos > max)
+					throw new Error("A good position should be between " + min + " and " + max)
+			},
+
+		checkGoodColor : function (color) {
+				if (!(Array.isArray(color) && color.length == 4))
+					throw new Error("Invalid color, a color should be an array with exactly 4 elements")
+				
+				for (var i = 0; i < 3; i++) 
+					Check.checkPosBetween(color[i], 0, 255)
+				
+				Check.checkPosBetween(color[3], 0, 1)
+			},
+	}
+
+	var Color = {
+		numToHex : function (c) {
+				var hex = c.toString(16);
+				return hex.length == 1 ? "0" + hex : hex;
+			},
+
+		colorToHex : function (col) {
+				return "#" + Color.numToHex(parseInt(col[0])) + Color.numToHex(parseInt(col[1])) + Color.numToHex(parseInt(col[2]));
+			},
+
+		hexRegex : /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i,
+
+		hexToColor : function (hex) {
+				var result = Color.hexRegex.exec(hex);
+				if (result)
+					return [
+						parseInt(result[1], 16),
+						parseInt(result[2], 16),
+						parseInt(result[3], 16),
+						1
+					]
+				else
+					throw Error("Invalid hex color.")
+			},
+
+		rgbaRegex : /^rgba\((\d+),(\d+),(\d+),(\d*\.\d*)\)$/i,
+
+		rgbaToColor : function (rgba) {
+				rgba = rgba.replace(/\s/g, "") 
+				var result = Color.rgbaRegex.exec(rgba)
+
+				var ret = [
+					parseInt(result[1]),
+					parseInt(result[2]),
+					parseInt(result[3]),
+					parseFloat(result[4])
+				]
+
+				return ret
+			},
+
+		rgbRegex : /^rgb\((\d+),(\d+),(\d+)\)$/i,
+
+		rgbToColor : function (rgb) {
+				rgb = rgb.replace(/\s/g, "") 
+				var result = rgbRegex3.exec(rgb)
+
+				var ret = [
+					parseInt(result[1]),
+					parseInt(result[2]),
+					parseInt(result[3])
+				]
+
+				return ret
+			},
+
+		colorToRgba : function (col) {
+				return "rgba(" + 
+					parseInt(col[0]) + ", " + 
+					parseInt(col[1]) + ", " + 
+					parseInt(col[2]) + ", " +
+					parseInt(col[3]) + ")"
+			},
+
+		colorToRgb : function (col) {
+			return "rgb(" +
+				parseInt(col[0]) + ", " + 
+				parseInt(col[1]) + ", " + 
+				parseInt(col[2]) + ")"
+		},
+
+		getColorType : function (col) {
+			if (Color.hexRegex.test(col)) return 'hex'
+			if (Color.rgbaRegex.test(col)) return 'rgba'
+			if (Color.rgbRegex.test(col)) return 'rgb'
+			return undefined
+		},
+
+		fromColor : function (color, colorType) {
+			switch (colorType) {
+				case 'hex' : return Color.hexToColor( color ) 
+				case 'rgba' : return Color.rgbaToColor( color ) 
+				case 'rgb' : return Color.rgbToColor( color ) 
+				default : return color	
+			}
+		},
+
+		colorTo : function (color, colorType) {
+			switch (colorType) {
+				case 'hex' : return Color.colorToHex( color )
+				case 'rgba' : return Color.colorToRgba( color )
+				case 'rgb' : return Color.colorToRgb( color )
+				default : return color
+			}
+		},
+	}
 
 	Rainbow.Utils = Utils
+	Rainbow.Check = Check
+	Rainbow.Color = Color	
+	Rainbow.RainbowCore = RainbowCore
 
 	return Rainbow
 })()
