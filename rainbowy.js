@@ -1,5 +1,5 @@
 
-var Rainbow = (function () {	
+var Rainbowy = (function () {	
 
 	var Rainbow = (function () {
 		function Rainbow (startColor, endColor) {
@@ -312,5 +312,5 @@ var Rainbow = (function () {
 // For node.js
 var module
 if (module) {
-	module.exports = Rainbow
+	module.exports = Rainbowy
 }

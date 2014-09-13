@@ -1,8 +1,8 @@
 {
-  "name": "rainbow.js",
-  "version": "1.0.0",
+  "name": "rainbowy.js",
+  "version": "1.0.1",
   "description": "A gradient manager with changable transition functions and multiple colors.",
-  "main": "rainbow.js",
+  "main": "rainbowy.js",
   "directories": {
     "test": "test"
   },
@@ -11,19 +11,18 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/nicu-chiciuc/rainbow.js"
+    "url": "https://github.com/nicu-chiciuc/rainbowy.js"
   },
   "keywords": [
     "javascript",
     "gradient",
     "rainbow",
-    "chiciuc",
     "transition"
   ],
   "author": "Nicusor Chiciuc",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/nicu-chiciuc/rainbow.js/issues"
+    "url": "https://github.com/nicu-chiciuc/rainbowy.js/issues"
   },
-  "homepage": "https://github.com/nicu-chiciuc/rainbow.js"
+  "homepage": "https://github.com/nicu-chiciuc/rainbowy.js"
 }
